@@ -1,0 +1,83 @@
+import torch
+import torchvision.transforms as T
+
+from src.adversarial.attack_base import Attack
+from src.adversarial.dct_attack import DCTFull
+
+class FGSM(Attack):
+    r"""
+    FGSM in the paper 'Explaining and harnessing adversarial examples'
+    [https://arxiv.org/abs/1412.6572]
+
+    Distance Measure : Linf
+
+    Arguments:
+        model (nn.Module): model to attack.
+        eps (float): maximum perturbation. (Default: 8/255)
+
+    Shape:
+        - images: :math:`(N, C, H, W)` where `N = number of batches`, `C = number of channels`,        `H = height` and `W = width`. It must have a range [0, 1].
+        - labels: :math:`(N)` where each value :math:`y_i` is :math:`0 \leq y_i \leq` `number of labels`.
+        - output: :math:`(N, C, H, W)`.
+
+    Examples::
+        >>> attack = torchattacks.FGSM(model, eps=8/255)
+        >>> adv_images = attack(images, labels)
+
+    """
+    def __init__(self, model, surrogate_loss, model_trms, eps=8/255, regularization=False, l2_lambda=0.001):
+        super().__init__("FGSM", model, model_trms)
+        self.eps = eps
+        self.supported_mode = ['default', 'targeted']
+        self.regularization = regularization
+        self.l2_lambda = l2_lambda
+        self.get_loss_fn = self.get_loss_l2 if regularization == True else self.get_loss_regular
+        self.loss = surrogate_loss
+        self.normalize_to_float = T.ConvertImageDtype(torch.float32)
+        self.dct = DCTFull()
+
+    def forward(self, images, labels):
+        r"""
+        Overridden.
+        """
+        images = images.clone().detach().to(self.device)
+        labels = labels.clone().detach().to(self.device)
+
+        if self.targeted:
+            target_labels = self.get_target_label(images, labels)
+        images = self.normalize_to_float(images)
+
+        images.requires_grad = True
+        outputs = self.get_logits(self.model_trms(images))
+
+        # Calculate loss
+        if self.targeted:
+            cost = -self.loss(outputs, target_labels)
+        else:
+            cost = self.loss(outputs, labels)
+
+        # Update adversarial images
+        grad = torch.autograd.grad(cost, images,
+                                   retain_graph=False, create_graph=False)[0]
+
+        adv_images = images + self.eps*grad.sign()
+        adv_images = torch.clamp(adv_images, min=0, max=1).detach()
+
+        return adv_images
+    
+    def get_loss(self, outputs):
+        self.get_loss_fn(outputs)
+    
+    def get_loss_l2(self, outputs):
+        loss = self.loss(outputs) + self.get_abs_param_sum() * self.l2_lambda
+        return loss
+    
+    def get_loss_regular(self, outputs):
+        loss = self.loss(outputs)
+        return loss
+
+    def get_abs_param_sum(self):
+        abs_param_sum = 0
+        for p in self.model.parameters():
+            abs_param_sum += p.pow(2.0).sum()
+        return abs_param_sum
