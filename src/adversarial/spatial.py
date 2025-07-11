@@ -230,6 +230,7 @@ class AttackConnection:
         self.hpf_masker = hpf_masker
         self.input_size = input_size
         self.l2_norm = []
+        self.l2_bound = l2_bound
         self.to_tensor = T.ConvertImageDtype(torch.float32)
         if kwargs.get('protocol_file') is None:
             protocol_file = ''
@@ -242,8 +243,8 @@ class AttackConnection:
         self.orig_save_dir = "./data/survey_data/orig"
         if l2_bound != -1:
             self.adv_dataset_path = self.set_up_run_in_adv_dataset(attack_type, l2_bound)
-        
-        self.frqa = FRQA(self.attack_type, run_name=self.adv_dataset_path, device=self.device)
+            self.frqa = FRQA(self.attack_type, run_name=self.adv_dataset_path, device=self.device)
+
         self.adversarial_samples = None
         self.n = 1
     
@@ -252,7 +253,8 @@ class AttackConnection:
         orig_x = x.clone().detach()
         perturbed_x = self.adv_attack(x, y)
         self.l2_norm.extend(self.get_l2(perturbed_x, x))
-        self.frqa(perturbed_x, orig_x, paths)
+        if self.l2_bound != -1:
+            self.frqa(perturbed_x, orig_x, paths)
         paths = self.save_to_adv_dataset(paths, perturbed_x)
         self.adversarial_samples = perturbed_x
         self.n += len(x)

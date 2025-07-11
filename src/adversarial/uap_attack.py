@@ -7,7 +7,7 @@ from torch import nn
 from src.adversarial.attack_base import Attack
 from src.model.pretrained import DeiT
 
-class XTransfer(Attack):
+class XTRANSFER(Attack):
 
     def __init__(self, 
                 model,
