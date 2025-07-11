@@ -24,7 +24,7 @@ from src.adversarial.ppba import PPBA
 from src.adversarial.bsr import BSR
 from src.adversarial.deepfool import DeepFool
 from src.adversarial.uvmifgsm import UVMIFGSM, VMIFGSM
-from src.adversarial.uap_attack import SGDUAP, SGAUAP
+from src.adversarial.uap_attack import SGDUAP, SGAUAP, XTRANSFER
 from src.adversarial.dct_attack import DCTCW
 from src.adversarial.adversarial_rounding import FastAdversarialRounding
 from src.adversarial.fgsm import FGSM, HpfFGSM
@@ -156,7 +156,7 @@ class AttackLoader:
                                     dataset_type=self.dataset_type,
                                     *args, 
                                     **kwargs)
-        elif attack_type in ['sga_uap', 'sgd_uap']:
+        elif attack_type in ['sga_uap', 'sgd_uap', 'xtransfer']:
             attack = UniversalPatchAttack(attack_type,
                                     surrogate_model=self.surrogate_model,
                                     device=self.device, 
@@ -402,6 +402,9 @@ class UniversalPatchAttack(AttackConnection):
             attack = SGDUAP(model, model_trms=self.model_trms, *args, **kwargs)
         elif attack_type == 'sga_uap':
             attack = SGAUAP(model, model_trms=self.model_trms, *args, **kwargs)
+        elif attack_type == 'xtransfer':
+            attack = XTRANSFER(model, model_trms=self.model_trms, *args, **kwargs)
+        
         else:
             raise ValueError('ADVERSARIAL ATTACK NOT RECOGNIZED FROM TYPE. Change spatial_adv_type in options')
         return attack

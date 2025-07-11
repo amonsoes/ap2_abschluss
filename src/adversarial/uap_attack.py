@@ -1,9 +1,34 @@
 import torch
 import math
+import XTransferBench
+import XTransferBench.zoo
 
 from torch import nn
 from src.adversarial.attack_base import Attack
 from src.model.pretrained import DeiT
+
+class XTransfer(Attack):
+
+    def __init__(self, 
+                model,
+                model_trms,  
+                random_uap=False,
+                eps=8/255,
+                l2_bound=-1,
+                *args, 
+                **kwargs):
+        super().__init__("XTRANSFER", model, model_trms, *args, **kwargs)
+        self.eps = eps
+        self.xtransfer = XTransferBench.zoo.load_attacker('linf_non_targeted', 'xtransfer_large_linf_eps12_non_targeted')
+
+    def forward(self, images, labels):
+        r"""
+        Overridden.
+        """
+        images = images.clone().detach().to(self.device)
+        adv_images = self.xtransfer(images) 
+        adv_images = torch.clamp(adv_images, min=0, max=1).detach()
+        return adv_images
 
 class SGAUAP(Attack):
 
