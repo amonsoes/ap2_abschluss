@@ -11,7 +11,7 @@ class Training:
     def __init__(self, opt, model, model_name, data, num_classes, optim_args, epochs, model_type, log_result, lr_gamma=0.9):
         self.model = model
         self.data = data
-        self.criterion = nn.CrossEntropyLoss()
+        self.criterion = nn.CrossEntropyLoss() if num_classes > 1 else nn.BCEWithLogitsLoss()
         self.device = self.model.device
         print(f'.....running on: {self.device}')
         self.model_type = model_type
@@ -137,6 +137,7 @@ class CNNTraining(Training):
             print('\nTEST COMPLETED. RESULTS:\n')
             print(result)
             print('\n\n')
+            print(self.data.test.dataset.nex_lst)
             self.utils.logger.exit()
             return 0.8 #result['MulticlassAccuracy'].item()
         

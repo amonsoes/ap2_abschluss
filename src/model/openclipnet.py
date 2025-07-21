@@ -72,4 +72,5 @@ class OpenClipLinear(nn.Module):
         return self.fc(x)
 
     def forward(self, x):
-        return self.forward_head(self.forward_features(x))
+        out = self.forward_head(self.forward_features(x)).squeeze(0)
+        return out.squeeze()

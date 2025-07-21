@@ -21,3 +21,5 @@
 *.pyc
 
 /pycache/
+
+/weights

@@ -203,6 +203,9 @@ class AttackLoader:
         elif self.dataset_type == 'cifar10':
             n_classes = 10
             surrogate_path = '' # CIFAR models are loaded from the model hub
+        elif self.dataset_type == 'c25':
+            n_classes = 1
+            surrogate_path = '' # Synthetic Data from Cozzolino et al. 25
         
         loader = CNNLoader(surrogate_path, adv_training_protocol)
         cnn, self.input_size = loader.transfer(surrogate_model, n_classes, feature_extract=False, device=self.device)

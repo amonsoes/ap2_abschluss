@@ -120,6 +120,11 @@ def model_setup(args, filename):
         args.transform = 'pretrained_deit'
     if args.surrogate_model == 'deit':
         args.surrogate_transform = 'pretrained_deit'
+    
+    if args.model_name == 'corviresnet' and args.batchsize > 1:
+        print('WARNING: Corvi2023 Resnet works with uncropped and true size images. Batch size has to be 1 as stacking is impossible.')
+        print('setting batch size to 1...')
+        args.batchsize = 1
     return args
 
 def adversarial_setup(args, filename):

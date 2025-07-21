@@ -5,11 +5,14 @@ import torch
 import torch.nn as nn
 
 from torchvision.models import resnet152, ResNet152_Weights, densenet201, DenseNet201_Weights, inception_v3, Inception_V3_Weights, ResNet50_Weights, resnet50
-from transformers import DeiTForImageClassification, DeiTForImageClassificationWithTeacher
+from transformers import DeiTForImageClassificationWithTeacher
 from src.model.xception import XceptionLoader, XceptionSettings
 
 from src.model.preactresnet import PreActResNet18
 from src.model.madry_resnet import madry_resnet50
+
+from src.model.clip_detector import ClipDetectorLoader
+from src.model.resnetmod import CorviResnetLoader
 
 class DeiT(DeiTForImageClassificationWithTeacher):
 
@@ -21,19 +24,6 @@ class DeiT(DeiTForImageClassificationWithTeacher):
         logits = output_obj.logits
         return logits
     
-
-"""class DeiT(nn.Module):
-
-    def __init__(self):
-        super().__init__()
-        self.deit = DeiTForImageClassificationWithTeacher.from_pretrained("facebook/deit-base-distilled-patch16-224", torch_dtype=torch.float32)
-        self.device = self.deit.device
-
-    def forward(self, x):
-        outputs = self.deit(x)
-        logits = outputs.logits
-        return logits"""
-
 class CNNLoader:
 
     def __init__(self, loading_dir='', adversarial_pretrained_opt=None):
@@ -153,6 +143,16 @@ class CNNLoader:
 
         elif model_name == "vit":
             model_ft = timm.create_model("vit_huge_patch14_224_in21k", checkpoint_path=self.loading_dir, num_classes=num_classes)
+            input_size = 224
+        
+        elif model_name == "clip_det":
+            loader = ClipDetectorLoader(device=device)
+            model_ft = loader.load_model()
+            input_size = 224
+
+        elif model_name == "corviresnet":
+            loader = CorviResnetLoader()
+            model_ft = loader.model
             input_size = 224
 
         else:
@@ -363,6 +363,16 @@ class CNNLoader:
         
         elif model_name == "vit":
             model_ft = timm.create_model("vit_huge_patch14_224_in21k", pretrained=True, num_classes=num_classes)
+            input_size = 224
+
+        elif model_name == "clip_det":
+            loader = ClipDetectorLoader(device=device)
+            model_ft, _, _ = loader.load_model()
+            input_size = 224
+
+        elif model_name == "corviresnet":
+            loader = CorviResnetLoader(device=device)
+            model_ft, _, _ = loader.load_model()
             input_size = 224
 
 

@@ -1,0 +1,11 @@
+CHOSEN PARAMS FOR RUN
+
+analysis_type : c25
+model_name : SynDetector_corviresnet
+transform : pretrained_corvi
+lr : 5e-05
+epochs : 15
+batch_size : 1
+adversarial_training : False
+jpeg compression: False
+jpeg compression rate: 99

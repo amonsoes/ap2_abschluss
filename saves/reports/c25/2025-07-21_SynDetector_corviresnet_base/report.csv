@@ -1,0 +1,5 @@
+filepath,prediction,label,mad,ssim,dists,l2
+./data/c25/dalle3/F_g5nKpWgAADvtB.jpg,1,0,0.0
+./data/c25/dalle3/F_jAmnBaQAA8TDD.jpg,1,0,0.0
+./data/c25/dalle3/F_jAy5QW0AAr3VW.jpg,1,0,0.0
+./data/c25/dalle3/F_oHSSQWsAAhoni.jpg,1,0,0.0

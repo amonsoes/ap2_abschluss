@@ -8,7 +8,7 @@ from torch.optim import RAdam, SGD, Adam, lr_scheduler
 from torchmetrics import MetricCollection
 from torchmetrics.classification import Accuracy, Recall, Precision, AveragePrecision, F1Score
 from src.adversarial.asr_metric import ASR, ConditionalAverageRate
-from src.datasets.data import Nips17ImgNetData, CIFAR10Dataset, FlickrFaces
+from src.datasets.data import Nips17ImgNetData, CIFAR10Dataset, Cozzolino25
 from src.adversarial.robust_cw import RCW
 
 
@@ -76,8 +76,8 @@ class TrainUtils:
             self.analysis = 'imgnet_classification'
         elif isinstance(data, CIFAR10Dataset):
             self.analysis = 'cifar10_classification'
-        elif isinstance(data, FlickrFaces):
-            self.analysis = 'flickr_classification'
+        elif isinstance(data, Cozzolino25):
+            self.analysis = 'c25'
         else:
             raise ValueError('ERROR: unknown Dataset type. Add type to analysis type in trainutils.py')
         if adversarial_opt == None:
@@ -483,7 +483,7 @@ class Logger:
     def write_to_report(self, filenames, class_results, ground_truth, mad_scores=None, ssim_scores=None, l2_norms=None):
         return self.report_fn(filenames, class_results, ground_truth, mad_scores, ssim_scores, l2_norms)
 
-    def write_to_report_binary(self, filenames, class_results, ground_truth, l2_norms):
+    def write_to_report_binary(self, filenames, class_results, ground_truth, mad_scores, ssim_scores,  l2_norms):
         if l2_norms == None or not l2_norms:
             l2_norms = [0.0] * len(filenames)
         class_results = torch.sigmoid(class_results) > 0.5

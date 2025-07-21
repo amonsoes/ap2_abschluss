@@ -15,6 +15,9 @@ class Clamp(torch.nn.Module):
         transformed_image = torch.clamp(image, min=0.0, max=1.0)
         return transformed_image
 
+
+
+
 class PostTransforms:
     
     def __init__(self,
@@ -58,6 +61,8 @@ class PostTransforms:
                         'augmented', 
                         'pretrained',
                         'pretrained_deit',
+                        'pretrained_clip',
+                        'pretrained_corvi',
                         'augmented_pretrained_imgnet', 
                         'band_cooccurrence', 
                         'cross_cooccurrence', 
@@ -101,7 +106,7 @@ class PostTransforms:
         
         surrogate_model_name = self.adversarial_opt.surrogate_model_params.surrogate_model
         #surrogate_input_size = self.adversarial_opt.surrogate_model_params.surrogate_input_size
-        surrogate_input_size = 224 if self.dataset_type in ['nips17', '140k_flickr_faces'] else 32
+        surrogate_input_size = 224 if self.dataset_type in ['nips17', '140k_flickr_faces', 'c25'] else 32
         surrogate_trm_name = self.adversarial_opt.surrogate_model_params.surrogate_transform
         surrogate_transforms = SpatialTransforms(surrogate_trm_name,
                                     self.dataset_type)
@@ -166,9 +171,11 @@ class PreTransforms:
                 device,
                 dataset_type,
                 target_transform,
+                model,
                 adversarial_opt):
         
         self.device = device
+        self.model_name = model.model_name
         self.input_size = input_size
         self.dataset_type = dataset_type
         self.adversarial_opt = adversarial_opt
@@ -230,6 +237,28 @@ class PreTransforms:
             val_base_transform = T.Compose([resize, 
                                             T.ConvertImageDtype(torch.float32), 
                                             Clamp()])
+        
+        elif self.dataset_type == 'c25':
+
+            transform = list()
+            if self.model_name == 'corviresnet':
+                patch_size = None
+                norm_type = 'resnet'
+                print('input none', flush=True)
+                transform_key = 'none_%s' % norm_type
+            else:
+                patch_size = 'Clip224'
+                norm_type = 'clip'
+                print('input resize:', 'Clip224', flush=True)
+                transform_key = 'Clip224_%s' % norm_type
+
+
+                transform.append(T.Resize(224, interpolation=InterpolationMode.BICUBIC))
+                transform.append(T.CenterCrop((224, 224)))
+            transform.append(T.ToTensor())
+            train_base_transform = val_base_transform = T.Compose(transform)
+        
+
             
         else:
             raise ValueError('ERROR : dataset type currently not supported for image transforms.')

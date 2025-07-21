@@ -1,7 +1,7 @@
 import csv
 
 from torch.utils.data import DataLoader, Subset, random_split
-from src.datasets.subsets import Nips17Subset, CustomCIFAR10, CustomCIFAR100, FlickrSubset, SurveySubset
+from src.datasets.subsets import Nips17Subset, CustomCIFAR10, CustomCIFAR100, SurveySubset, C25Subset
 from src.datasets.data_transforms.img_transform import PreTransforms, PostTransforms
 from torchvision.datasets import MNIST, CIFAR10, CIFAR100
 
@@ -13,12 +13,12 @@ class Data:
     def loader(self, dataset_name, *args, **kwargs):
         if dataset_name == 'nips17':
             dataset = Nips17ImgNetData(*args, **kwargs)
+        elif dataset_name == 'c25':
+            dataset = Cozzolino25(*args, **kwargs)
         elif dataset_name == 'mnist':
             dataset = MNISTDataset(*args, **kwargs)
         elif dataset_name == 'cifar10':
             dataset = CIFAR10Dataset(*args, **kwargs)
-        elif dataset_name == '140k_flickr_faces':
-            dataset = FlickrFaces(*args, **kwargs)
         elif dataset_name == 'survey':
             dataset = SurveyDataset(*args, **kwargs)
         else:
@@ -46,6 +46,7 @@ class BaseDataset:
                                     target_transform=target_transform, 
                                     input_size=input_size, 
                                     dataset_type=dataset_name,
+                                    model=model,
                                     adversarial_opt=adversarial_opt)
         self.post_transforms = PostTransforms(transform,
                                             adversarial_opt=adversarial_opt,
@@ -62,62 +63,32 @@ class BaseDataset:
         self.batch_size = batch_size
         self.x, self.y = input_size, input_size
 
-class FlickrFaces(BaseDataset):
+class Cozzolino25(BaseDataset):
 
     def __init__(self, n_datapoints, *args,**kwargs):
-        super().__init__('140k_flickr_faces', *args, **kwargs)
-        
-        self.dataset_type = '140k_flickr_faces'
+        super().__init__('c25', *args, **kwargs)
+        self.dataset_type = 'c25'
 
-        train_data, val_data, test_data = self.get_data()
-        if n_datapoints != -1:
-            train_data, _ = random_split(train_data, [n_datapoints, len(train_data)-n_datapoints])
-            val_data, _ = random_split(val_data, [n_datapoints, len(val_data)-n_datapoints])
-            dataset_size = len(test_data)
-            split_size = int(dataset_size * 0.5)
-            indices = list(range(dataset_size))
-            subset_indices = indices[split_size:]
-            test_data = Subset(test_data, subset_indices)
-            test_data, _ = random_split(test_data, [n_datapoints, len(test_data)-n_datapoints])
+        self.test_data = self.get_data(transform_val=self.transforms.transform_val, 
+                                    target_transform=self.transforms.target_transform)
+        if n_datapoints == -1:
+            self.test = self.train = self.validation =  DataLoader(self.test_data, batch_size=self.batch_size)
         else:
-            dataset_size = len(test_data)
-            split_size = int(dataset_size * 0.5)
-            indices = list(range(dataset_size))
-            subset_indices = indices[split_size:]
-            test_data = Subset(test_data, subset_indices)
-        self.train = DataLoader(train_data, batch_size=self.batch_size, shuffle=True)
-        self.validation = DataLoader(val_data, batch_size=self.batch_size, shuffle=True)
-        self.test = DataLoader(test_data, batch_size=self.batch_size, shuffle=False)
+            self.test_data, _ = random_split(self.test_data, [n_datapoints, len(self.test_data)-n_datapoints])
+            self.test = self.train = self.validation =  DataLoader(self.test_data, batch_size=self.batch_size)
+    
+    def get_data(self, transform_val, target_transform):
+        path = './data/c25/'
+        labels = path + 'list.csv'
 
-
-    def get_data(self):
-        path = './data/140k_flickr_faces'
-
-        train_labels = path + '/train.csv'
-        val_labels = path + '/valid.csv'
-        test_labels = path + '/test.csv'
-        data_path = path + '/real_vs_fake/real-vs-fake/'
-
-
-        train = FlickrSubset(label_path=train_labels, 
-                img_path=data_path, 
-                transform=self.transforms.transform_train, 
-                target_transform=self.transforms.target_transform, 
-                adversarial=self.adversarial_opt.adversarial)
-        val = FlickrSubset(label_path=val_labels,
-                img_path=data_path, 
-                transform=self.transforms.transform_val, 
-                target_transform=self.transforms.target_transform, 
-                adversarial=self.adversarial_opt.adversarial)
-        test = FlickrSubset(label_path=test_labels, 
-                img_path=data_path, 
-                transform=self.transforms.transform_val, 
-                target_transform=self.transforms.target_transform, 
-                adversarial=self.adversarial_opt.adversarial,
-                is_test_data=True)
-
-
-        return train, val, test
+        test_data = C25Subset(label_path=labels, 
+                                        root=path, 
+                                        transform=transform_val, 
+                                        target_transform=target_transform, 
+                                        adversarial=self.adversarial_opt.adversarial, 
+                                        is_test_data=True)
+        
+        return test_data
 
 
 class Nips17ImgNetData(BaseDataset):
@@ -164,8 +135,6 @@ class SurveyDataset(Nips17ImgNetData):
         super().__init__(*args, **kwargs)
 
         self.dist_dict = {
-
-
             'percal':{'4.0':[12,13,14,15],
                       '8.0':[16,17,18,19],
                       '15.0':[8,9,10,11],
@@ -236,7 +205,6 @@ class SurveyDataset(Nips17ImgNetData):
                       '15.0':[268,269,270,271],
                       '23.0':[272,273,274,275],
                       '38.0':[276,277,278,279]},
-
         }
 
     def get_data(self, transform_val, target_transform):

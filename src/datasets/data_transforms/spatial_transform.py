@@ -8,7 +8,6 @@ from torchvision import transforms as T
 from src.datasets.data_transforms.cooccurrence import BandCMatrix, CrossCMatrix
 from src.datasets.data_transforms.data_helper import StatTensor
 from src.utils.datautils import YCBCRTransform
-from transformers import DeiTImageProcessor
 
 
 class CustomCompose(T.Compose):
@@ -53,7 +52,7 @@ class SpatialTransforms:
             self.normalize = T.Normalize([0.4914, 0.4822, 0.4465], [0.2023, 0.1994, 0.2010])
         elif dataset_type == 'cifar100':
             self.normalize = T.Normalize([0.5070, 0.4865, 0.4409], [0.2673, 0.2564, 0.2761])
-        elif dataset_type in ['nips17', '140k_flickr_faces']:
+        elif dataset_type == 'nips17':
             self.normalize = T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             
         if transform == 'augmented':
@@ -73,21 +72,6 @@ class SpatialTransforms:
                                         self.normalize], [0,0])
 
         elif transform == 'pretrained_deit':
-            #IMAGENET_STANDARD_MEAN = [0.5, 0.5, 0.5]
-            #IMAGENET_STANDARD_STD = [0.5, 0.5, 0.5]#
-            
-            # IMGNet format without augmentations
-            # resize, center crop and rescale are done by pre transforms
-            """deit_processor = DeiTImageProcessor(do_resize=False, do_center_crop=False, do_rescale=False)
-
-            def preprocess_deit(x):
-                preprocessed =  deit_processor.preprocess(x, return_tensors='pt')
-                return preprocessed['pixel_values']"""
-            
-            """self.transform_train = T.Compose([preprocess_deit])
-
-            # wrap in custom compose to be able to pass x, y, paths in test loop
-            self.transform_val = CustomCompose([preprocess_deit], [0])"""
             
             normalize = T.Normalize([0.5, 0.5, 0.5], [0.5, 0.5, 0.5])
             self.transform_train = T.Compose([T.ConvertImageDtype(torch.float32),
@@ -95,6 +79,27 @@ class SpatialTransforms:
 
             self.transform_val = CustomCompose([T.ConvertImageDtype(torch.float32),
                                         normalize], [0,0])
+        
+        elif transform == 'pretrained_clip':
+
+            post_transforms_list = list()
+            print("normalize CLIP")
+            post_transforms_list.append(T.ConvertImageDtype(torch.float32))
+            post_transforms_list.append(
+                T.Normalize(mean=(0.48145466, 0.4578275, 0.40821073),std=(0.26862954, 0.26130258, 0.27577711))
+            )
+
+            self.transform_train = self.transform_val = CustomCompose(post_transforms_list, [0,0])
+
+        elif transform == 'pretrained_corvi':
+
+            post_transforms_list = list()
+            post_transforms_list.append(T.ConvertImageDtype(torch.float32))
+            post_transforms_list.append(
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            )
+
+            self.transform_train = self.transform_val = CustomCompose(post_transforms_list, [0,0])
 
         elif transform == 'augmented_pretrained_imgnet':
             # IMGNet format with augmentations

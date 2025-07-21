@@ -1,0 +1,17 @@
+filepath,prediction,label,mad,ssim,dists,l2
+./data/c25/dalle3/F_g5nKpWgAADvtB.jpg,0,0,0.0
+./data/c25/dalle3/F_jAmnBaQAA8TDD.jpg,0,0,0.0
+./data/c25/dalle3/F_jAy5QW0AAr3VW.jpg,0,0,0.0
+./data/c25/dalle3/F_oHSSQWsAAhoni.jpg,0,0,0.0
+./data/c25/dalle3/F_p_dfNXAAAoy2K.jpg,0,0,0.0
+./data/c25/dalle3/F_phccyXMAE4b7p.jpg,0,0,0.0
+./data/c25/dalle3/F_qVOOmaQAAD0L9.jpg,0,0,0.0
+./data/c25/dalle3/F_qjwaXakAA3_K_.jpg,0,0,0.0
+./data/c25/dalle3/F_r-EQ8bgAAXh-W.jpg,0,0,0.0
+./data/c25/dalle3/F_rthegXsAAh5Ht.jpg,0,0,0.0
+./data/c25/dalle3/F_sOQwSXIAA98Jk.jpg,0,0,0.0
+./data/c25/dalle3/F_sPwMiawAAdajF.jpg,0,0,0.0
+./data/c25/dalle3/F_ssE_TXAAAPtcR.jpg,0,0,0.0
+./data/c25/dalle3/F_sySlSXwAA_RVP.jpg,0,0,0.0
+./data/c25/dalle3/F_v3urCWAAA7QQp.jpg,0,0,0.0
+./data/c25/dalle3/F_xQRfGW8AAKUkg.jpg,0,0,0.0
