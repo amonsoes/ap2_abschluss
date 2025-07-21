@@ -16,6 +16,8 @@
 
 /saves/reports/imgnet_classification/20*
 
+saves/reports/c25/
+
 /src/adversarial/resources
 
 *.pyc
