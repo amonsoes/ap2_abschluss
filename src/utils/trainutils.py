@@ -100,7 +100,7 @@ class TrainUtils:
         self.stopper = EarlyStopping(scheduler=self.scheduler, tolerance=patience_stopper)
         if num_classes == 1:
             self.metrics = MetricCollection([
-                Accuracy(task='binary').to(device),
+                Accuracy(task='binary', threshold=0.0).to(device),
                 Precision(task='binary', num_classes=num_classes, average='micro').to(device),
                 Recall(task='binary', num_classes=num_classes, average='micro').to(device),
                 AveragePrecision(task='binary', num_classes=num_classes, average='micro').to(device),

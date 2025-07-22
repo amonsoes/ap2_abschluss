@@ -58,6 +58,8 @@ class Nips17Subset(Dataset):
     
 class C25Subset(Dataset):
 
+    # only for Synthbuster data
+
     def __init__(self, root, label_path, transform, target_transform, adversarial, is_test_data=False):
         super().__init__()
         self.labels = pd.read_csv(label_path)
@@ -108,10 +110,10 @@ class C25Subset(Dataset):
         return image, label
     
     def target_transform(self, label):
-        if label == 'real':
-            return 1
-        else:
+        if label.startswith('real'):
             return 0
+        else:
+            return 1
 
 
 
