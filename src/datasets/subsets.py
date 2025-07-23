@@ -94,6 +94,7 @@ class C25Subset(Dataset):
             image = Image.open(img_path)
             label = self.labels.iloc[idx, 1]
             image = self.transform(image)
+            image = self.check_input(image)
             label = self.target_transform(label)
             return image, label, img_path
         except:
@@ -108,6 +109,15 @@ class C25Subset(Dataset):
         image = self.transform(image, label)
         label = self.target_transform(label)
         return image, label
+    
+    def check_input(self, img):
+        # check if image is 3 x w x h
+        c, _, _ = img.shape
+        if c == 1:
+            # project greyscale to color by just copying the c dimension
+            img = img.repeat(3,1,1)
+            print('project greyscale to 3 channels')
+        return img
     
     def target_transform(self, label):
         if label.startswith('real'):
