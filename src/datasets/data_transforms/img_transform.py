@@ -106,7 +106,10 @@ class PostTransforms:
         
         surrogate_model_name = self.adversarial_opt.surrogate_model_params.surrogate_model
         #surrogate_input_size = self.adversarial_opt.surrogate_model_params.surrogate_input_size
-        surrogate_input_size = 224 if self.dataset_type in ['nips17', '140k_flickr_faces', 'c25'] else 32
+        if self.dataset_type in ['nips17', '140k_flickr_faces', 'c25']:
+            surrogate_input_size = 224 if self.adversarial_opt.surrogate_model_params.surrogate_model != 'corviresnet' else None
+        else:
+            surrogate_input_size = 32 # TODO: Corvi needs no resize
         surrogate_trm_name = self.adversarial_opt.surrogate_model_params.surrogate_transform
         surrogate_transforms = SpatialTransforms(surrogate_trm_name,
                                     self.dataset_type)

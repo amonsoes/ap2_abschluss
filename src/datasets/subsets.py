@@ -89,10 +89,10 @@ class C25Subset(Dataset):
         return image, label, img_path
 
     def getitem_withpath(self, idx):
-        img_path = os.path.join(self.img_dir, self.labels.iloc[idx, 1])
+        img_path = os.path.join(self.img_dir, self.labels.iloc[idx, 0])
         try:
             image = Image.open(img_path)
-            label = self.labels.iloc[idx, -1]
+            label = self.labels.iloc[idx, 1]
             image = self.transform(image)
             label = self.target_transform(label)
             return image, label, img_path
