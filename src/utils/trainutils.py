@@ -486,7 +486,7 @@ class Logger:
     def write_to_report_binary(self, filenames, class_results, ground_truth, mad_scores, ssim_scores,  l2_norms):
         if l2_norms == None or not l2_norms:
             l2_norms = [0.0] * len(filenames)
-        class_results = torch.sigmoid(class_results) > 0.5
+        class_results = torch.sigmoid(class_results) > 0.0
         class_results = class_results.T.flatten().int()
         with open(f'{self.run_name}/report.csv', 'a') as report_file:
             report_obj = csv.writer(report_file)
@@ -538,7 +538,7 @@ class Logger:
             with open(f'{self.run_name}/results.txt', 'w') as f:
                 f.write('RESULTS\n\n')
                 for k in result:
-                    f.write(f'{k}:{result[k]}\n')
+                    f.write(f'{k}:{result[k].item()}\n')
                 if self.adversarial_opt.adversarial:
                     base_path = "/".join(self.run_name.split('/')[:-1])
                     asr_metric = ASR(self.run_name, f'{base_path}/{self.base_run_name}', is_targeted, prune_dataset, adv_dataset)

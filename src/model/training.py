@@ -131,6 +131,7 @@ class CNNTraining(Training):
                 self.report(x_hat, y, paths)
             # compute Acc, Recall, Precision, F1, ....
             result = self.utils.metrics.compute()
+            self.utils.logger.log_test_results(result)
             # compute ASR and CAD if adv attack happened
             if hasattr(self.data.post_transforms, 'attack'):
                 self.log_attack_details(result)

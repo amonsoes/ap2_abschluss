@@ -83,30 +83,27 @@ class C25Subset(Dataset):
     def getitem_adversarial(self, idx):
         img_path = os.path.join(self.img_dir, self.labels.iloc[idx, 0])
         image = Image.open(img_path)
-        label = self.labels.iloc[idx, -1]
+        label = self.labels.iloc[idx, 1]
         image = self.transform(image)
+        image = self.check_input(image)
         label = self.target_transform(label)
         return image, label, img_path
 
     def getitem_withpath(self, idx):
         img_path = os.path.join(self.img_dir, self.labels.iloc[idx, 0])
-        try:
-            image = Image.open(img_path)
-            label = self.labels.iloc[idx, 1]
-            image = self.transform(image)
-            image = self.check_input(image)
-            label = self.target_transform(label)
-            return image, label, img_path
-        except:
-            print(f'Image does not exist: {img_path}')
-            self.nex_lst.append(img_path)
-            return torch.ones(3,224,224), 0, 'xyz'
+        image = Image.open(img_path)
+        label = self.labels.iloc[idx, 1]
+        image = self.transform(image)
+        image = self.check_input(image)
+        label = self.target_transform(label)
+        return image, label, img_path
     
     def getitem(self, idx):
         img_path = os.path.join(self.img_dir, self.labels.iloc[idx, 0])
         image = Image.open(img_path)
-        label = self.labels.iloc[idx, -1]
+        label = self.labels.iloc[idx, 1]
         image = self.transform(image, label)
+        image = self.check_input(image)
         label = self.target_transform(label)
         return image, label
     

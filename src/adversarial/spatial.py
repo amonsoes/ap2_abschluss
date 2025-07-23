@@ -258,7 +258,7 @@ class AttackConnection:
         self.l2_norm.extend(self.get_l2(perturbed_x, x))
         if self.l2_bound != -1:
             self.frqa(perturbed_x, orig_x, paths)
-        paths = self.save_to_adv_dataset(paths, perturbed_x)
+            paths = self.save_to_adv_dataset(paths, perturbed_x)
         self.adversarial_samples = perturbed_x
         self.n += len(x)
         perturbed_x = torch.clamp(perturbed_x, min=0.0, max=1.0)
