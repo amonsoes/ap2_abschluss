@@ -1,5 +1,0 @@
-filepath,prediction,label,mad,ssim,dists,l2
-./data/c25/real/GGnOr8DXgAEhKTN.jpg,0,1,0.0
-./data/c25/midjourney_v5/F8K_l4LXsAMHwbt.jpg,1,0,0.0
-./data/c25/midjourney_v5/F9zKZC4WgAA569w.jpg,0,0,0.0
-./data/c25/midjourney_v5/GCX3L5YW8AAkCnq.jpg,0,0,0.0
