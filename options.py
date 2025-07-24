@@ -61,7 +61,7 @@ def build_args():
 
     # set l2 early stop criterion
     # in order to create adv samples within certain L2 bounds
-    parser.add_argument('--l2_bound', type=float, default=134.0, help='set l2 bound for the early stopping of attack optimization')
+    parser.add_argument('--l2_bound', type=float, default=-1, help='set l2 bound for the early stopping of attack optimization')
 
     # generative attacks
     parser.add_argument('--arch', type=str, default='res', help='set generator architecture for adversarial samples')

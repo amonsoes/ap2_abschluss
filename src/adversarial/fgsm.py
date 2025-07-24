@@ -37,7 +37,7 @@ class FGSM(Attack):
         self.regularization = regularization
         self.l2_lambda = l2_lambda
         self.get_loss_fn = self.get_loss_l2 if regularization == True else self.get_loss_regular
-        self.loss = torch.nn.CrossEntropyLoss()
+        self.loss = torch.nn.BCEWithLogitsLoss() if model.model_name in ['clip_det', 'corviresnet'] else torch.nn.CrossEntropyLoss()
         self.model_trms = model_trms
         self.avg_salient_mask = torch.zeros((3,224,224))
         self.n = 0
@@ -62,8 +62,13 @@ class FGSM(Attack):
         images = images.clone().detach().to(self.device)
         labels = labels.clone().detach().to(self.device)
 
+        if isinstance(self.loss, torch.nn.BCEWithLogitsLoss):
+            labels = labels.to(torch.float32)
+
         if self.targeted:
             target_labels = self.get_target_label(images, labels)
+            if isinstance(self.loss, torch.nn.BCEWithLogitsLoss):
+                target_labels = target_labels.to(torch.float32)
         
         images.requires_grad = True
         inputs = self.model_trms(images)

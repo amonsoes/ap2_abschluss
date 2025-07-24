@@ -561,7 +561,7 @@ class WhiteBoxAttack(AttackConnection):
                         *args, 
                         **kwargs)
         self.model = surrogate_model
-        surrogate_loss = torch.nn.CrossEntropyLoss()
+        surrogate_loss = torch.nn.BCEWithLogitsLoss() if surrogate_model.model_name in ['clip_det', 'corviresnet'] else torch.nn.CrossEntropyLoss()
         self.model_trms = surrogate_model_trms
         self.input_size = input_size
         self.dataset_type = dataset_type

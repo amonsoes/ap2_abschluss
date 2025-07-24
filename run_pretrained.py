@@ -1,13 +1,9 @@
-import csv
-import torch
 
-from tqdm import tqdm
+import torch
 
 from src.model.pretrained import CNNLoader
 from src.model.trainer import Trainer
 from src.datasets.data import Data
-from src.adversarial.cw_test import CWTestEnvironment
-from src.adversarial.auc_test import AUCTest
 from options import args
 
 torch.set_num_threads(4)
