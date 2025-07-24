@@ -1,10 +1,7 @@
 import torch
-import torch.nn as nn
 import torchvision.transforms as T
-import scipy.ndimage as nd
-import torch_dct as dct
 import pytorch_colors as colors
-import math
+
 
 from src.adversarial.attack_base import Attack
 
@@ -107,33 +104,6 @@ class FGSM(Attack):
         for p in self.model.parameters():
             abs_param_sum += p.pow(2.0).sum()
         return abs_param_sum
-        
-        
-class YCBCRTransform:
-    
-    def __init__(self):
-        print('Warning: input tensors must be in the format RGB')
-    
-    def __call__(self, tensor):
-        ycbcr = self.get_channels(tensor)
-        return ycbcr
-    
-    @staticmethod
-    def normalize(tensor):
-        tensor / 255
-        return tensor
-
-    @staticmethod
-    def to_int(tensor):
-        tensor += 0.5
-        tensor *= 255
-        return tensor
-        
-    def get_channels(self, tensor):
-        return colors.rgb_to_ycbcr(tensor)
-    
-    def inverse(self, tensor):
-        return colors.ycbcr_to_rgb(tensor)
 
 
 class HpfFGSM(FGSM):
@@ -160,8 +130,13 @@ class HpfFGSM(FGSM):
         images = images.clone().detach().to(self.device)
         labels = labels.clone().detach().to(self.device)
 
+        if isinstance(self.loss, torch.nn.BCEWithLogitsLoss):
+            labels = labels.to(torch.float32)
+
         if self.targeted:
             target_labels = self.get_target_label(images, labels)
+            if isinstance(self.loss, torch.nn.BCEWithLogitsLoss):
+                target_labels = target_labels.to(torch.float32)
 
         # =====inserted===
         
@@ -186,75 +161,3 @@ class HpfFGSM(FGSM):
 
         return adv_images
     
-
-class YcbcrHpfFGSM(FGSM):
-    r"""
-    HPF-Version of standard FGSM
-    """
-    def __init__(self, model, hpf_masker, *args, **kwargs):
-        super().__init__(model, *args, **kwargs)
-        self.hpf_masker = hpf_masker
-        self.to_grey = T.Grayscale()
-        
-    def get_eps_delta(self, mask):
-        # mask values are between 0-1
-        ones_tensor = torch.ones_like(mask)
-        greyscale_mask = self.to_grey(mask)
-        ones_tensor[0, 0] = greyscale_mask
-        mean_inv_mask = (1 - ones_tensor).mean()
-        eps_delta = 1 + mean_inv_mask
-        return eps_delta.item()
-
-    def normalize_ycbcr(self, imgs):
-        imgs = imgs.to(torch.float32)
-        max_item_half = imgs[0].max().item() / 2
-        imgs = imgs - max_item_half
-        imgs = imgs / max_item_half
-        return imgs
-
-    def forward(self, images, labels):
-        r"""
-        Overridden.
-        """
-        images = images.clone().detach().to(self.device)
-        labels = labels.clone().detach().to(self.device)
-
-        # =====inserted===
-        
-        attack_mask = self.hpf_masker(images, labels, model=self.model, model_trms=self.model_trms, loss=self.loss)
-        
-        images = images.to(torch.float32) / 255
-        images.requires_grad = True
-        
-        eps_delta = self.get_eps_delta(attack_mask)
-        adjusted_eps = self.eps * eps_delta
-
-        # Get Loss
-        outputs = self.get_logits(self.model_trms(images))
-        if self.targeted:
-            cost = -self.loss(outputs, target_labels)
-        else:
-            cost = self.loss(outputs, labels)
-
-        # Update adversarial images
-        grad = torch.autograd.grad(cost, images,
-                                   retain_graph=False, create_graph=False)[0]
-
-        # Make HPF and regular adv_images
-        adv_images = images + adjusted_eps*grad.sign().detach()
-        #adv_images = torch.clamp(inter_adv_images, min=0, max=1).detach()
-        
-        hpf_adv_images = images + adjusted_eps*attack_mask*grad.sign().detach()
-        #hpf_adv_images = torch.clamp(hpf_inter_adv_images, min=0, max=1).detach()
-        
-        # Extract crominance info from orig adv, extract luminance from hpf adv
-        adv_img_luminance = self.to_grey(adv_images)
-        hpf_adv_img_luminance = self.to_grey(hpf_adv_images)
-        
-        crominance_adv_img = adv_images - adv_img_luminance
-
-        # Combine crominance from orig adv and luminance from hpf adv
-        final_adv_imgs = crominance_adv_img + hpf_adv_img_luminance
-        final_adv_imgs = torch.clamp(final_adv_imgs, min=0, max=1)
-
-        return final_adv_imgs

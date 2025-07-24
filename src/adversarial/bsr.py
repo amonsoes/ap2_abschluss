@@ -21,7 +21,7 @@ class MIFGSM(Attack):
         self.steps = steps
         self.decay = decay
         self.supported_mode = ["default", "targeted"]
-        self.loss = nn.CrossEntropyLoss()
+        self.loss = torch.nn.BCEWithLogitsLoss() if model.model_name in ['clip_det', 'corviresnet'] else torch.nn.CrossEntropyLoss()
 
         if l2_bound != -1:
             self.eps = self.get_eps_in_range(l2_bound)
@@ -37,8 +37,13 @@ class MIFGSM(Attack):
         images = images.clone().detach().to(self.device)
         labels = labels.clone().detach().to(self.device)
 
+        if isinstance(self.loss, torch.nn.BCEWithLogitsLoss):
+            labels = labels.to(torch.float32)
+
         if self.targeted:
             labels = self.get_target_label(images, labels)
+            if isinstance(self.loss, torch.nn.BCEWithLogitsLoss):
+                labels = labels.to(torch.float32)
 
         momentum = torch.zeros_like(images).detach().to(self.device)
 

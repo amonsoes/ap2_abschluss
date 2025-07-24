@@ -12,9 +12,9 @@ from src.adversarial.hpf_mask import HPFMasker
 from src.adversarial.black_box.boundary_attack import BoundaryAttack, HPFBoundaryAttack
 from src.adversarial.black_box.nes_attack import NESAttack
 from src.adversarial.black_box.square_attack import SquareAttack, HPFSquareAttack 
-from src.adversarial.iqm import ImageQualityMetric
-from src.adversarial.custom_cw import CW, WRCW, YCW
+from src.adversarial.custom_cw import CW
 from src.adversarial.robust_cw import RCW
+from src.adversarial.robust_perc import RAL
 from src.adversarial.perc_cw import PerC_CW, PerC_AL
 from src.adversarial.cvfgsm import CVFGSM
 from src.adversarial.jpeg_ifgm import JIFGSM
@@ -107,6 +107,7 @@ class AttackLoader:
                            'vifcw',
                            'msssimcw',
                            'rcw',
+                            'ral',
                            'wrcw',
                            'ycw',
                            'varrcw',
@@ -568,7 +569,7 @@ class WhiteBoxAttack(AttackConnection):
         self.internal_compression_rate = internal_jpeg_quality
         self.attack = self.load_attack(self.model, attack_type, surrogate_loss, hpf_masker, *args, **kwargs)
         self.jpeg_compr_obj = jpeg_compr_obj
-        if attack_type == 'rcw':
+        if attack_type in ['rcw', 'ral']:
             self.call_fn = self.attack_rcw
         elif attack_type == 'far':
             self.call_fn = self.attack_far
@@ -682,15 +683,13 @@ class WhiteBoxAttack(AttackConnection):
         elif attack_type == 'cw':
             attack = CW(model, model_trms=self.model_trms, *args, **kwargs)
         elif attack_type == 'rcw':
-            if self.dataset_type == 'nips17':
-                cqe_init = 'random'
-            elif self.dataset_type == 'cifar10':
+            if self.dataset_type == 'cifar10':
                 cqe_init = 'center'
+            else:
+                cqe_init = 'random'
             attack = RCW(model, model_trms=self.model_trms, cqe_init=cqe_init, *args, **kwargs)
-        elif attack_type == 'wrcw':
-            attack = WRCW(model, model_trms=self.model_trms, *args, **kwargs)
-        elif attack_type == 'ycw':
-            attack = YCW(model, model_trms=self.model_trms, *args, **kwargs)
+        elif attack_type == 'ral':
+            attack = RAL(model, model_trms=self.model_trms, *args, **kwargs)
         elif attack_type == 'perccw':
             attack = PerC_CW(model, model_trms=self.model_trms, *args, **kwargs)
         elif attack_type == 'percal':

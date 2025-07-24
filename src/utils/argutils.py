@@ -147,6 +147,7 @@ def adversarial_setup(args, filename):
     if adversarial_opt.adversarial:
         if adversarial_opt.spatial_adv_type not in ['sparsefool',
                                                     'percal',
+                                                    'ral',
                                                     'ppba',
                                                     'sparsesigmaattack',
                                                     'deepfool']:
@@ -280,7 +281,6 @@ def adversarial_setup(args, filename):
                                                     'ycw',
                                                     'varrcw',
                                                     'ercw',
-                                                    'perccw',
                                                     'dctcw']:
                 spatial_attack_params.c = args.c
                 spatial_attack_params.kappa = args.kappa
@@ -290,11 +290,21 @@ def adversarial_setup(args, filename):
                 spatial_attack_params.verbose_cw = args.verbose_cw
                 spatial_attack_params.target_mode = args.target_mode
                 spatial_attack_params.batch_size = args.batchsize
-                if adversarial_opt.spatial_adv_type in ['rcw', 'wrcw', 'ycw', 'varrcw','ercw']:
-                    spatial_attack_params.rcw_comp_lower_bound = args.rcw_comp_lower_bound
-                    spatial_attack_params.rcw_beta = args.rcw_beta
-                    if adversarial_opt.spatial_adv_type == 'rcw':
-                        spatial_attack_params.q_search_type = args.q_search_type
+
+            if adversarial_opt.spatial_adv_type in ['percal', 'ral']:
+                spatial_attack_params.kappa = args.kappa
+                spatial_attack_params.steps = args.steps
+                spatial_attack_params.alpha_c = args.alpha_c
+                spatial_attack_params.alpha_l = args.alpha_l
+                spatial_attack_params.target_mode = args.target_mode
+                spatial_attack_params.batch_size = args.batchsize
+
+
+            if adversarial_opt.spatial_adv_type in ['rcw', 'wrcw', 'ycw', 'varrcw','ercw']:
+                spatial_attack_params.rcw_comp_lower_bound = args.rcw_comp_lower_bound
+                spatial_attack_params.rcw_beta = args.rcw_beta
+                if adversarial_opt.spatial_adv_type == 'rcw':
+                    spatial_attack_params.q_search_type = args.q_search_type
             if adversarial_opt.spatial_adv_type in ['percal']:
                 spatial_attack_params.steps = args.steps
                 spatial_attack_params.batch_size = args.batchsize

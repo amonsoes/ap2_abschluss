@@ -208,6 +208,13 @@ class HPFMasker:
         inputs.requires_grad = True
 
         outputs = model(model_trms(inputs))
+
+        if isinstance(loss, torch.nn.BCEWithLogitsLoss):
+            labels = labels.to(torch.float32)
+        
+        if target_labels != None:
+            if isinstance(loss, torch.nn.BCEWithLogitsLoss):
+                target_labels = target_labels.to(torch.float32)
         
         if self.targeted:
             cost = -loss(outputs, target_labels)

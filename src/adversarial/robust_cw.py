@@ -231,7 +231,10 @@ class RCW(CW):
         self.kappa = self.original_kappa
         images = images.clone().detach().to(self.device)
         labels = labels.clone().detach().to(self.device)
-        
+
+        if isinstance(self.loss, torch.nn.BCEWithLogitsLoss):
+            labels = labels.to(torch.float32)
+    
         self.determined_quality, n_steps = self.search_for_q(cqe_image=cqe_image, ref_image=images)
         self.determined_quality = self.determined_quality.squeeze(0)
         self.cqe_steps_log.append(n_steps)
@@ -243,9 +246,12 @@ class RCW(CW):
                 self.cqe_log[str(quality)] = 1
 
         if self.targeted:
-            target_labels = self.get_target_label(images, labels)
+            if self.model.model_name in ['clip_det', 'corviresnet']:
+                target_labels = (~(labels.bool())).to(torch.int64) # just the inverse boolean of the labels as its binary
+            else:
+                target_labels = self.get_target_label(images, labels)
 
-        
+
         if self.use_attack_mask:
             attack_mask = self.hpf_masker(images, 
                                         labels, 

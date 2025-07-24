@@ -335,7 +335,7 @@ class PerC_AL(Attack):
         self.kappa = kappa
         self.original_kappa = kappa
         self.batch_size = batch_size
-        self.loss = nn.CrossEntropyLoss(reduction='sum')
+        self.loss = nn.BCEWithLogitsLoss(reduction='sum') if model.model_name in ['clip_det', 'corviresnet'] else nn.CrossEntropyLoss(reduction='sum')
         self.l2_bound = 0 if l2_bound == -1 else l2_bound
         self.low, self.high = self.get_iq_range_from_l2_bound(l2_bound)
         self.low = self.get_l2_from_bounds(l2_bound)
