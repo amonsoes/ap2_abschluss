@@ -124,7 +124,7 @@ def build_args():
     
     # adv: black-box: SquareAttack and ppba
     parser.add_argument('--p_init', type=float, default=0.008, help='square attack: percentage of pixels to be attacked')
-    parser.add_argument('--n_queries', type=int, default=25, help='number of queries to the target model')
+    parser.add_argument('--n_queries', type=int, default=5000, help='number of queries to the target model')
 
     
     # adv: spectral attack

@@ -342,7 +342,7 @@ class ResNet(nn.Module):
     def forward(self, x):
         x = self.forward_features(x)
         x = self.forward_head(x)
-        return x.squeeze(0)
+        return x.squeeze(1)
 
 
 def resnet18(pretrained=False, **kwargs):

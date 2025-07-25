@@ -15,7 +15,7 @@ class SquareAttack(Attack):
                 n_queries=5000,
                 n_restarts=1,
                 p_init=0.8,
-                loss="margin",
+                loss="ce",
                 resc_schedule=True,
                 seed=0,
                 verbose=True,
@@ -42,6 +42,8 @@ class SquareAttack(Attack):
         self.loss = loss
         self.rescale_schedule = resc_schedule
         self.supported_mode = ["default", "targeted"]
+        self.get_acc = self.get_acc_binary if model.model_name in ['clip_det', 'corviresnet'] else self.get_acc_mc
+        self.margin_and_loss = self.margin_and_loss_binary if model.model_name in ['clip_det', 'corviresnet'] else self.margin_and_loss_mc
 
         if l2_bound != -1:
             self.eps = self.get_eps_in_range(l2_bound)
@@ -59,7 +61,7 @@ class SquareAttack(Attack):
 
         return adv_images
 
-    def margin_and_loss(self, x, y):
+    def margin_and_loss_mc(self, x, y):
         """
         :param y:        correct labels if untargeted else target labels
         """
@@ -81,6 +83,28 @@ class SquareAttack(Attack):
                 return y_others - y_corr, xent
             elif self.loss == "margin":
                 return y_others - y_corr, y_others - y_corr
+
+    def margin_and_loss_binary(self, x, y):
+        """
+        :param y:        this usually works with CELoss
+        But getting only one activation per instance
+        we need to do binary.
+        the ground truth is being passed as y, not the target.
+        """
+        
+        target_y = (~(y.bool())).to(torch.float32)
+        logits = self.get_logits(x)
+        xent = F.binary_cross_entropy_with_logits(logits, y.to(torch.float32), reduction="none")
+
+        # we cannot compute a margin for a 1d BCE output
+        # instead, take the distance to 0.0, as this is the class boundary and we know that the sample is not adversarial yet
+
+        margin = -(target_y - logits) # in keepting with the current layout and usage of margins
+
+        if self.loss == "ce":
+            return margin, -1.0 * xent
+        elif self.loss == "margin":
+            return margin, margin
 
     def init_hyperparam(self, x):
         assert self.norm in ["Linf", "L2"]
@@ -261,6 +285,7 @@ class SquareAttack(Attack):
                                 n_queries[ind_succ].median().item()
                             ),
                             "- loss={:.3f}".format(loss_min.mean()),
+                            f"- margins={margin_min}"
                         )
 
                     if ind_succ.numel() == n_ex_total:
@@ -436,10 +461,7 @@ class SquareAttack(Attack):
             else:
                 y = self.get_target_label(x, y)
 
-        if not self.targeted:
-            acc = self.get_logits(x).max(1)[1] == y
-        else:
-            acc = self.get_logits(x).max(1)[1] != y
+        acc = self.get_acc(self.get_logits(x), y)
 
         startt = time.time()
 
@@ -457,10 +479,7 @@ class SquareAttack(Attack):
                 adv_curr, n_queries = self.attack_single_run(x_to_fool, y_to_fool)
 
                 output_curr = self.get_logits(adv_curr)
-                if not self.targeted:
-                    acc_curr = output_curr.max(1)[1] == y_to_fool
-                else:
-                    acc_curr = output_curr.max(1)[1] != y_to_fool
+                acc_curr = self.get_acc(output_curr, y_to_fool)
                 ind_curr = (acc_curr == 0).nonzero().squeeze()
 
                 acc[ind_to_fool[ind_curr]] = 0
@@ -477,3 +496,22 @@ class SquareAttack(Attack):
 
     def get_logits(self, x):
         return self.model(self.model_trms(x))
+    
+    def get_acc_binary(self, outs, y):
+        preds = (outs > 0.0).to(torch.float32)
+        if not self.targeted:
+            acc = preds == y
+        else:
+            acc = preds != y
+        return acc
+    
+    def get_acc_mc(self, outs, y):
+        preds = outs.max(1)[1]
+        if not self.targeted:
+            acc = preds == y
+        else:
+            acc = preds != y
+        return acc
+
+
+
